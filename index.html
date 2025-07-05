@@ -9,12 +9,22 @@
 </head>
 <body>
   <div class="container">
+
+    <div class="heading">
+      <h1 class="title">4X4O</h1>
+      <div class="scores-container">
+        <div class="score-container">0</div>
+        <div class="best-container">0</div>
+        <div class="audio-container" id="audio-control">🔊</div>
+      </div>
+    </div>
+
     <div class="game-container">
       <div class="game-message">
         <p></p>
         <div class="lower">
 	        <a class="keep-playing-button">Keep going</a>
-          <a class="retry-button">Try again</a>
+          <a class="retry-button">Again!</a>
         </div>
       </div>
 
@@ -53,16 +63,15 @@
     <p class="game-explanation">
       <strong class="important">How to play:</strong> <span id="game-instructions"></span>. Get 4 <strong>X</strong>s or <strong>O</strong>s in a row horizontally, vertically or diagonally.</strong>
     </p>
+
   </div>
 
-  <script src="js/bind_polyfill.js"></script>
-  <script src="js/classlist_polyfill.js"></script>
-  <script src="js/animframe_polyfill.js"></script>
+  <audio id="audio" src="assets/music.ogg" loop hidden type="audio/ogg"></audio>
+
   <script src="js/keyboard_input_manager.js"></script>
   <script src="js/html_actuator.js"></script>
   <script src="js/grid.js"></script>
   <script src="js/tile.js"></script>
-  <script src="js/local_storage_manager.js"></script>
   <script src="js/game_manager.js"></script>
   <script src="js/application.js"></script>
 </body>

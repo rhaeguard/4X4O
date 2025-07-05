@@ -4,4 +4,5 @@ It's like 2048, but with `X` and `O`s where the goal is to get 4 of them in a ro
 
 # Credits
 
-This is the fork of [gabrielecirulli/2048](https://github.com/gabrielecirulli/2048).
+- This is the fork of [gabrielecirulli/2048](https://github.com/gabrielecirulli/2048).
+- Background music (_Sketchbook 2024-05-29_) by Abstraction ([website](https://abstractionmusic.com/), [music-loop-bundle](https://tallbeard.itch.io/music-loop-bundle))
