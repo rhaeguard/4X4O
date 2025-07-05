@@ -36,26 +36,15 @@ class GameManager {
 
   // Set up the game
   setup() {
-    let previousState = null
-
-    // Reload the game from a previous game if present
-    if (previousState) {
-      this.grid = new Grid(previousState.grid.size,
-        previousState.grid.cells); // Reload grid
-      this.score = previousState.score;
-      this.over = previousState.over;
-      this.won = previousState.won;
-      this.keepPlaying = previousState.keepPlaying;
-    } else {
-      this.grid = new Grid(this.size);
-      this.score = 0;
-      this.over = false;
-      this.won = false;
-      this.keepPlaying = false;
-
-      // Add the initial tiles
-      this.addStartTiles();
-    }
+    this.grid = new Grid(this.size);
+    this.score = 0;
+    this.over = false;
+    this.won = false;
+    this.status = 'noop'
+    this.keepPlaying = false;
+    this.player = Math.random() < 0.5 ? 'X' : 'O';
+    // Add the initial tiles
+    this.addStartTiles();
 
     // Update the actuator
     this.actuate();
@@ -85,6 +74,7 @@ class GameManager {
   isWinning() {
     // !!!!! the grid is in [column][row] format
     // check vertical
+    let solutions = []
     for (let col = 0; col < this.grid.size; col++) {
       let column = this.grid.cells[col]
       let currentValue = column[0] == null ? null : column[0].value;
@@ -98,23 +88,25 @@ class GameManager {
       }
 
       if (matches && currentValue != null) {
-        return true
+        solutions.push([...column])
       }
     }
     // check horizontal
     for (let row = 0; row < this.grid.size; row++) {
       let currentValue = this.grid.cells[0][row] == null ? null : this.grid.cells[0][row].value;
       let matches = true
+      let theRow = []
       for (let col = 0; col < this.grid.size; col++) {
         let tileValue = this.grid.cells[col][row] == null ? null : this.grid.cells[col][row].value;
         if (tileValue !== currentValue) {
           matches = false
           break
         }
+        theRow.push(this.grid.cells[col][row])
       }
 
       if (matches && currentValue != null) {
-        return true
+        solutions.push([...theRow])
       }
     }
     // check diagonals
@@ -124,6 +116,7 @@ class GameManager {
       let [col, row] = pairs[0]
       let currentValue = this.grid.cells[col][row] == null ? null : this.grid.cells[col][row].value;
       let matches = true
+      let diag = []
       for (let pair of pairs) {
         let [col, row] = pair
         let tileValue = this.grid.cells[col][row] == null ? null : this.grid.cells[col][row].value;
@@ -132,13 +125,14 @@ class GameManager {
           matches = false
           break
         }
+        diag.push(this.grid.cells[col][row])
       }
 
       if (matches && currentValue != null) {
-        return true
+        solutions.push([...diag])
       }
     }
-    return false
+    return solutions
   }
 
   // Sends the updated grid to the actuator
@@ -146,8 +140,9 @@ class GameManager {
     this.actuator.actuate(this.grid, {
       score: this.score,
       over: this.over,
-      won: this.won,
+      status: this.status,
       bestScore: this.bestScore,
+      player: this.player,
       terminated: this.isGameTerminated()
     });
 
@@ -237,8 +232,28 @@ class GameManager {
       // Update the score
       self.score += 1;
 
-      if (this.isWinning()) {
-        this.won = true;
+      const solutions = this.isWinning()
+
+      if (solutions.length > 0) {
+        this.over = true;
+        
+        let playerWins = false
+        let playerLoses = false
+        
+        for (let solutionTiles of solutions) {
+          playerWins = playerWins || (solutionTiles[0].value === this.player)
+          playerLoses = playerLoses || (solutionTiles[0].value !== this.player)
+        }
+        
+        this.status = 'noop';
+        if (playerWins && playerLoses) {
+          this.status = 'draw'
+        } else if (playerWins) {
+          this.status = 'win'
+        } else if (playerLoses) {
+          this.status = 'loss'
+        }
+
         if (self.bestScore == null) {
           self.bestScore = self.score;
         } else {

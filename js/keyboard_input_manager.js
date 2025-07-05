@@ -62,17 +62,10 @@ class KeyboardInputManager {
           self.emit("move", mapped);
         }
       }
-
-      // // R key restarts the game
-      // if (!modifiers && event.which === 82) {
-      //   self.restart.call(self, event);
-      // }
     });
 
     // Respond to button presses
     this.bindButtonPress(".retry-button", this.restart);
-    // this.bindButtonPress(".restart-button", this.restart);
-    // this.bindButtonPress(".keep-playing-button", this.keepPlaying);
 
     // Respond to swipe events
     let touchStartClientX, touchStartClientY;

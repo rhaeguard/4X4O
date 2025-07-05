@@ -69,6 +69,7 @@ h1.title {
   text-align: right;
 }
 
+.player-container,
 .score-container,
 .best-container,
 .audio-container {
@@ -86,6 +87,7 @@ h1.title {
   text-align: center;
 }
 
+.player-container:after,
 .score-container:after,
 .best-container:after,
 .audio-container:after {
@@ -128,6 +130,10 @@ h1.title {
 
 .audio-container:after {
   content: "SFX";
+}
+
+.player-container:after {
+  content: "You";
 }
 
 .audio-container:hover {

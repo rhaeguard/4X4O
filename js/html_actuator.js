@@ -4,6 +4,7 @@ class HTMLActuator {
     this.messageContainer = document.querySelector(".game-message");
     this.scoreContainer   = document.querySelector(".score-container");
     this.bestContainer    = document.querySelector(".best-container");
+    this.playerContainer    = document.querySelector(".player-container"); 
     this.score = 0;
   }
 
@@ -16,18 +17,17 @@ class HTMLActuator {
       grid.cells.forEach(function (column) {
         column.forEach(function (cell) {
           if (cell) {
-            self.addTile(cell);
+            self.addTile(cell, metadata.player);
           }
         });
       });
 
       self.updateScore(metadata.score);
       self.updateBestScore(metadata.bestScore);
+      self.setPlayerIcon(metadata.player);
 
       if (metadata.terminated) {
-        if (metadata.won) {
-          self.message(metadata.score); // You win!
-        }
+        self.message(metadata);
       }
 
     });
@@ -44,7 +44,7 @@ class HTMLActuator {
     }
   };
 
-  addTile(tile) {
+  addTile(tile, player) {
     let self = this;
 
     let wrapper = document.createElement("div");
@@ -54,8 +54,6 @@ class HTMLActuator {
 
     // We can't use classlist because it somehow glitches when replacing classes
     let classes = ["tile", "tile-" + tile.value, positionClass];
-
-    if (tile.value > 2048) classes.push("tile-super");
 
     this.applyClasses(wrapper, classes);
 
@@ -74,7 +72,7 @@ class HTMLActuator {
 
       // Render the tiles that merged
       tile.mergedFrom.forEach(function (merged) {
-        self.addTile(merged);
+        self.addTile(merged, player);
       });
     } else {
       classes.push("tile-new");
@@ -83,6 +81,10 @@ class HTMLActuator {
 
     // Add the inner part of the tile to the wrapper
     wrapper.appendChild(inner);
+    if (tile.value === player) {
+      inner.style.backgroundColor = '#708090'
+      inner.style.color = '#faf8ef'
+    }
 
     // Put the tile on the board
     this.tileContainer.appendChild(wrapper);
@@ -101,12 +103,26 @@ class HTMLActuator {
     return "tile-position-" + position.x + "-" + position.y;
   };
 
-  message(score) {
-    let type = "game-over";
-    let message = `You won!`;
+  message(metadata) {
+    const status = metadata.status
 
-    this.messageContainer.classList.add(type);
-    this.messageContainer.getElementsByTagName("p")[0].textContent = message;
+    let type = "game-over";
+    let message = null
+
+    if (status === "win") {
+      message = `You won!`;
+    } else if (status === "loss") {
+      message = `You lost!`;
+    } else if (status === "draw") {
+      message = `Draw!`;
+    } else {
+      // pass
+    }
+
+    if (message) {
+      this.messageContainer.classList.add(type);
+      this.messageContainer.getElementsByTagName("p")[0].textContent = message;
+    }
   };
 
   clearMessage() {
@@ -137,5 +153,9 @@ class HTMLActuator {
       bestScore = "?"
     }
     this.bestContainer.textContent = bestScore;
-  };
+  }
+
+  setPlayerIcon(player) {
+    this.playerContainer.textContent = player
+  }
 }
