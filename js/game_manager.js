@@ -33,7 +33,7 @@ GameManager.prototype.isGameTerminated = function () {
 
 // Set up the game
 GameManager.prototype.setup = function () {
-  var previousState = this.storageManager.getGameState();
+  var previousState = null//this.storageManager.getGameState();
 
   // Reload the game from a previous game if present
   if (previousState) {
@@ -65,15 +65,80 @@ GameManager.prototype.addStartTiles = function () {
   }
 };
 
+let lastRandomTileValue = null
+
 // Adds a tile in a random position
 GameManager.prototype.addRandomTile = function () {
   if (this.grid.cellsAvailable()) {
-    var value = Math.random() < 0.9 ? 2 : 4;
-    var tile = new Tile(this.grid.randomAvailableCell(), value);
+    if (lastRandomTileValue == null) {
+      lastRandomTileValue = Math.random() < 0.5 ? 'X' : 'O';
+    } else {
+      lastRandomTileValue = lastRandomTileValue === 'X' ? 'O' : 'X'
+    }
+    var tile = new Tile(this.grid.randomAvailableCell(), lastRandomTileValue);
 
     this.grid.insertTile(tile);
   }
 };
+
+GameManager.prototype.isWinning = function () {
+  // !!!!! the grid is in [column][row] format
+  // check vertical
+  for (let col = 0; col < this.grid.size; col++) {
+    let column = this.grid.cells[col]
+    let currentValue = column[0] == null ? null : column[0].value;
+    let matches = true
+    for (let row = 0; row < this.grid.size; row++) {
+      let tileValue = column[row] == null ? null : column[row].value;
+      if (tileValue !== currentValue) {
+        matches = false
+        break
+      }
+    }
+
+    if (matches && currentValue != null) {
+      return true
+    }
+  }
+  // check horizontal
+  for (let row = 0; row < this.grid.size; row++) {
+    let currentValue = this.grid.cells[0][row] == null ? null : this.grid.cells[0][row].value;
+    let matches = true
+    for (let col = 0; col < this.grid.size; col++) {
+      let tileValue = this.grid.cells[col][row] == null ? null : this.grid.cells[col][row].value;
+      if (tileValue !== currentValue) {
+        matches = false
+        break
+      }
+    }
+
+    if (matches && currentValue != null) {
+      return true
+    }
+  }
+  // check diagonals
+  const tlbr = [[0, 0], [1, 1], [2, 2], [3, 3]]
+  const bltr = [[0, 3], [1, 2], [2, 1], [3, 0]]
+  for (let pairs of [tlbr, bltr]) {
+    let [col, row] = pairs[0]
+    let currentValue = this.grid.cells[col][row] == null ? null : this.grid.cells[col][row].value;
+    let matches = true
+    for (let pair of pairs) {
+      let [col, row] = pair
+      let tileValue = this.grid.cells[col][row] == null ? null : this.grid.cells[col][row].value;
+
+      if (tileValue !== currentValue) {
+        matches = false
+        break
+      }
+    }
+
+    if (matches && currentValue != null) {
+      return true
+    }
+  }
+  return false
+}
 
 // Sends the updated grid to the actuator
 GameManager.prototype.actuate = function () {
@@ -154,7 +219,7 @@ GameManager.prototype.move = function (direction) {
 
         // Only one merger per row traversal?
         if (next && next.value === tile.value && !next.mergedFrom) {
-          var merged = new Tile(positions.next, tile.value * 2);
+          var merged = new Tile(positions.next, tile.value);
           merged.mergedFrom = [tile, next];
 
           self.grid.insertTile(merged);
@@ -162,9 +227,6 @@ GameManager.prototype.move = function (direction) {
 
           // Converge the two tiles' positions
           tile.updatePosition(positions.next);
-
-          // Update the score
-          self.score += merged.value;
 
           // The mighty 2048 tile
           if (merged.value === 2048) self.won = true;
@@ -182,9 +244,20 @@ GameManager.prototype.move = function (direction) {
   if (moved) {
     this.addRandomTile();
 
-    if (!this.movesAvailable()) {
-      this.over = true; // Game over!
+    // Update the score
+    self.score += 1;
+
+    if (this.isWinning()) {
+      this.over = true;
     }
+
+    // if (self.score == 4) {
+    //   this.over = true; // Game over!
+    // }
+
+    // if (!this.movesAvailable()) {
+    //   this.over = true; // Game over!
+    // }
 
     this.actuate();
   }
